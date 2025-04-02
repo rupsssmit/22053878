@@ -1,0 +1,21 @@
+const express = require("express"); const axios = require("axios");
+
+const app = express(); const PORT = 8000; const WINDOW_SIZE = 10; const storage = { p: [], f: [], e: [], r: [] };
+
+const API_URLS = { p: "https://thirdparty.com/prime", f: "https://thirdparty.com/fibonacci", e: "https://thirdparty.com/even", r: "https://thirdparty.com/random" };
+
+app.get("/numbers/:numberid", async (req, res) => { const numberid = req.params.numberid; if (!API_URLS[numberid]) { return res.status(400).json({ error: "Invalid number ID" }); }
+
+const startTime = Date.now(); let numbers = [];
+
+try { const response = await axios.get(API_URLS[numberid], { timeout: 500 }); numbers = response.data.numbers || []; } catch (error) { numbers = []; }
+
+const uniqueNumbers = [...new Set(numbers.filter(n => !storage[numberid].includes(n)))]; storage[numberid].push(...uniqueNumbers);
+
+if (storage[numberid].length > WINDOW_SIZE) { storage[numberid] = storage[numberid].slice(-WINDOW_SIZE); }
+
+const average = storage[numberid].length ? storage[numberid].reduce((sum, num) => sum + num, 0) / storage[numberid].length : 0;
+
+res.json({ numbers: storage[numberid], average: average, response_time: ${Date.now() - startTime}ms }); });
+
+app.listen(PORT, () => { console.log(Server running on http://127.0.0.1:${PORT}); });
